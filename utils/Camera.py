@@ -5,7 +5,7 @@ import numpy as np
 class Camera:
     def __init__(self, pos=pyrr.Vector3((0.0, 0.0, 0.0))):
         self.SENSITIVITY = 0.5
-        self.SPEED = 0.1
+        self.SPEED = 0.15
         self.position = pos
         self.front = pyrr.Vector3((0, 0, -1))
         self.up = pyrr.Vector3((0, 1, 0))
