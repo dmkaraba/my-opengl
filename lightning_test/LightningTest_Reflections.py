@@ -125,7 +125,6 @@ def move_camera(window):
 
 def cursor_position_callback(window, xpos, ypos):
     camera.mouth_update(xpos, ypos)
-    # glfw.set_cursor_pos(window, WINDOW_RESOLUTION[0] / 2, WINDOW_RESOLUTION[1] / 2)
 
 
 if not glfw.init():

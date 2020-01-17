@@ -143,7 +143,7 @@ glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
 # load image
-image = Image.open("textures/earth.png")
+image = Image.open("course/textures/crate.jpg")
 #image = image.transpose(Image.FLIP_TOP_BOTTOM)
 img_data = image.convert("RGBA").tobytes()
 # img_data = np.array(image.getdata(), np.uint8) # second way of getting the raw image data
@@ -165,8 +165,9 @@ while not glfw.window_should_close(window):
 
     rot_x = pyrr.Matrix44.from_x_rotation(0.5 * glfw.get_time())
     rot_y = pyrr.Matrix44.from_y_rotation(0.8 * glfw.get_time())
+    rot = pyrr.matrix44.multiply(rot_x, rot_y)
 
-    glUniformMatrix4fv(rotation_loc, 1, GL_FALSE, pyrr.matrix44.multiply(rot_x, rot_y))
+    glUniformMatrix4fv(rotation_loc, 1, GL_FALSE, rot)
 
     glDrawElements(GL_TRIANGLES, len(indices), GL_UNSIGNED_INT, None)
 
