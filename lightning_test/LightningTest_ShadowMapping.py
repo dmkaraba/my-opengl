@@ -65,7 +65,7 @@ cubePositions = [
     (0.0,  0.0,  0.0),
     (2.0,  5.0,  -15.0),
     (-1.5, -2.2, -2.5),
-    # (-3.8, -2.0, -12.3),
+    (-3.8, -2.0, -12.3),
     (2.4,  -0.4, 2.5),
     (-1.7, 3.0,  -7.5),
     (1.3,  -2.0, -2.5),
@@ -246,9 +246,12 @@ glUniform1i(cube_shadowMap_loc, 1)
 glUseProgram(debug_depth_quad_shader)
 glUniform1i(debugPlane_screenTexture_loc, 0)
 
-light_pos = pyrr.Vector3((-2.0, 4.0, -1.0))
+light_pos = pyrr.Vector3((2.0, 4.0, -1.0))
 
 while not glfw.window_should_close(window):
+    light_pos = pyrr.Vector3((np.sin(glfw.get_time())*5, 0, 0))
+    move_camera(window)
+
     # 1. render depth of scene to texture (from light's perspective)
     lightProjection = pyrr.matrix44.create_orthogonal_projection(-10.0, 10.0, -10.0, 10.0, 1.0, 7.5)
     lightView = pyrr.matrix44.create_look_at(
@@ -288,7 +291,7 @@ while not glfw.window_should_close(window):
     glUseProgram(cube_shader)
     view = camera.get_world_to_view_matrix()
     projection = pyrr.matrix44.create_perspective_projection_matrix(45, SCR_WIDTH / SCR_HEIGHT, 0.1, 100)
-    glUniformMatrix4fv(cube_model_loc, 1, GL_FALSE, view)
+    glUniformMatrix4fv(cube_view_loc, 1, GL_FALSE, view)
     glUniformMatrix4fv(cube_projection_loc, 1, GL_FALSE, projection)
     # set light uniforms
     glUniform3fv(cube_viewPos_loc, 1, GL_FALSE, pyrr.Vector3(camera.position))
@@ -315,10 +318,10 @@ while not glfw.window_should_close(window):
     # end of render_scene()
 
     # render Depth map to quad for visual debugging
-    glUseProgram(debug_depth_quad_shader)
-    glActiveTexture(GL_TEXTURE0)
-    glBindTexture(GL_TEXTURE_2D, depthMap)
-    render_quad()
+    # glUseProgram(debug_depth_quad_shader)
+    # glActiveTexture(GL_TEXTURE0)
+    # glBindTexture(GL_TEXTURE_2D, depthMap)
+    # render_quad()
 
     # glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
     glfw.swap_buffers(window)

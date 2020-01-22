@@ -26,7 +26,6 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     float currentDepth = projCoords.z;
     // check whether current frag pos is in shadow
     float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
-
     return shadow;
 }
 
@@ -50,6 +49,5 @@ void main()
     // calculate shadow
     float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
     vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
-
     FragColor = vec4(lighting, 1.0);
 }
