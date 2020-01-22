@@ -186,6 +186,7 @@ def render_quad(quad_vao=None):
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4)
     glBindVertexArray(0)
 
+
 # ============================================================ #
 #                  configure depth map FBO                     #
 # ============================================================ #
@@ -224,26 +225,31 @@ glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, plane_vertices.itemsize * 5, cty
 
 
 glUseProgram(cube_shader)
-glClearColor(0, 0.1, 0.1, 1)
+glClearColor(0, 0.1, 0.1, 1)   # DO WE NEED IT ???
 glEnable(GL_DEPTH_TEST)
 
 cube_model_loc = glGetUniformLocation(cube_shader, 'model')
 cube_view_loc = glGetUniformLocation(cube_shader, 'view')
 cube_projection_loc = glGetUniformLocation(cube_shader, 'projection')
-cube_texture1_loc = glGetUniformLocation(cube_shader, 'texture1')
+cube_lightSpaceMatrix_loc = glGetUniformLocation(cube_shader, 'lightSpaceMatrix')
+cube_diffuseTexture_loc = glGetUniformLocation(cube_shader, 'diffuseTexture')
+cube_shadowMap_loc = glGetUniformLocation(cube_shader, 'shadowMap')
+cube_lightPos_loc = glGetUniformLocation(cube_shader, 'lightPos')
+cube_viewPos_loc = glGetUniformLocation(cube_shader, 'viewPos')
 light_model_loc = glGetUniformLocation(simple_depth_shader, 'model')
 light_spaceMatrix_loc = glGetUniformLocation(simple_depth_shader, 'lightSpaceMatrix')
 debugPlane_screenTexture_loc = glGetUniformLocation(debug_depth_quad_shader, 'screenTexture')
 
+glUseProgram(cube_shader)
+glUniform1i(cube_diffuseTexture_loc, 0)
+glUniform1i(cube_shadowMap_loc, 1)
 glUseProgram(debug_depth_quad_shader)
 glUniform1i(debugPlane_screenTexture_loc, 0)
-glUseProgram(cube_shader)
-glUniform1i(cube_texture1_loc, 0)
 
 light_pos = pyrr.Vector3((-2.0, 4.0, -1.0))
 
 while not glfw.window_should_close(window):
-    # render depth of scene to texture (from light's perspective)
+    # 1. render depth of scene to texture (from light's perspective)
     lightProjection = pyrr.matrix44.create_orthogonal_projection(-10.0, 10.0, -10.0, 10.0, 1.0, 7.5)
     lightView = pyrr.matrix44.create_look_at(
         light_pos, pyrr.Vector3((0.0, 0.0, 0.0)), pyrr.Vector3((0.0, 1.0, 0.0)))
@@ -258,13 +264,12 @@ while not glfw.window_should_close(window):
     glActiveTexture(GL_TEXTURE0)
     glBindTexture(GL_TEXTURE_2D, textureID[0])
 
-    # renderScene(simpleDepthShader);
+    # render_scene()
     # floor
     glBindVertexArray(plane_VAO)
     model = pyrr.matrix44.create_from_translation(pyrr.Vector3((0, -5, 0)))
     glUniformMatrix4fv(light_model_loc, 1, GL_FALSE, model)
     glDrawArrays(GL_TRIANGLES, 0, 6)
-
     # cubes
     for i, p in enumerate(cubePositions):
         pos = pyrr.matrix44.create_from_translation(pyrr.Vector3(p))
@@ -272,13 +277,43 @@ while not glfw.window_should_close(window):
         model = pyrr.matrix44.multiply(rot, pos)
         glUniformMatrix4fv(light_model_loc, 1, GL_FALSE, model)
         render_cube()
-    # end of renderScene
+    # end of render_scene()
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
     # reset viewport
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    # 2. render scene as normal using the generated depth/shadow map
+    glUseProgram(cube_shader)
+    view = camera.get_world_to_view_matrix()
+    projection = pyrr.matrix44.create_perspective_projection_matrix(45, SCR_WIDTH / SCR_HEIGHT, 0.1, 100)
+    glUniformMatrix4fv(cube_model_loc, 1, GL_FALSE, view)
+    glUniformMatrix4fv(cube_projection_loc, 1, GL_FALSE, projection)
+    # set light uniforms
+    glUniform3fv(cube_viewPos_loc, 1, GL_FALSE, pyrr.Vector3(camera.position))
+    glUniform3fv(cube_lightPos_loc, 1, GL_FALSE, light_pos)
+    glUniformMatrix4fv(cube_lightSpaceMatrix_loc, 1, GL_FALSE, lightSpaceMatrix)
+    glActiveTexture(GL_TEXTURE0)
+    glBindTexture(GL_TEXTURE_2D, textureID[0])
+    glActiveTexture(GL_TEXTURE1)
+    glBindTexture(GL_TEXTURE_2D, depthMap)
+
+    # render_scene()
+    # floor
+    glBindVertexArray(plane_VAO)
+    model = pyrr.matrix44.create_from_translation(pyrr.Vector3((0, -5, 0)))
+    glUniformMatrix4fv(cube_model_loc, 1, GL_FALSE, model)
+    glDrawArrays(GL_TRIANGLES, 0, 6)
+    # cubes
+    for i, p in enumerate(cubePositions):
+        pos = pyrr.matrix44.create_from_translation(pyrr.Vector3(p))
+        rot = pyrr.matrix44.create_from_axis_rotation(pyrr.Vector3((1.0, 0.3, 0.5)), 0.3 * i)
+        model = pyrr.matrix44.multiply(rot, pos)
+        glUniformMatrix4fv(cube_model_loc, 1, GL_FALSE, model)
+        render_cube()
+    # end of render_scene()
+
     # render Depth map to quad for visual debugging
     glUseProgram(debug_depth_quad_shader)
     glActiveTexture(GL_TEXTURE0)
