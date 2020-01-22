@@ -10,7 +10,7 @@ from utils.TextureLoader import load_texture, create_2D_texture_depth
 SCR_WIDTH = 1280
 SCR_HEIGHT = 720
 
-camera = Camera(pyrr.Vector3((0.0, 0.0, 5.0)))
+camera = Camera(pyrr.Vector3((0.0, 2.0, 5.0)))
 
 
 def window_resize(window, width, height):
@@ -62,15 +62,15 @@ plane_vertices = [
 plane_vertices = np.array(plane_vertices, dtype=np.float32)
 
 cubePositions = [
-    (0.0,  0.0,  0.0),
-    (2.0,  5.0,  -15.0),
-    (-1.5, -2.2, -2.5),
-    (-3.8, -2.0, -12.3),
-    (2.4,  -0.4, 2.5),
+    (0.0,  2.0,  0.0),
+    (2.0,  6.0,  -10.0),
+    (-1.5, 2.2, -2.5),
+    (-3.8, 2.0, -12.3),
+    (2.4,  1.0, 2.5),
     (-1.7, 3.0,  -7.5),
-    (1.3,  -2.0, -2.5),
+    (1.3,  4.0, -2.5),
     (1.5,  2.0,  -2.5),
-    (1.5,  0.2,  -1.5),
+    (1.5,  4.2,  -1.5),
     (-1.3, 1.0,  -1.0),
 ]
 
@@ -222,10 +222,9 @@ glEnableVertexAttribArray(0)
 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, plane_vertices.itemsize * 5, ctypes.c_void_p(0))
 glEnableVertexAttribArray(1)
 glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, plane_vertices.itemsize * 5, ctypes.c_void_p(12))
+# ============================================================
 
-
-glUseProgram(cube_shader)
-glClearColor(0, 0.1, 0.1, 1)   # DO WE NEED IT ???
+glClearColor(0, 0.1, 0.1, 1)
 glEnable(GL_DEPTH_TEST)
 
 cube_model_loc = glGetUniformLocation(cube_shader, 'model')
@@ -246,10 +245,10 @@ glUniform1i(cube_shadowMap_loc, 1)
 glUseProgram(debug_depth_quad_shader)
 glUniform1i(debugPlane_screenTexture_loc, 0)
 
-light_pos = pyrr.Vector3((2.0, 4.0, -1.0))
+light_pos = pyrr.Vector3((2.0, 6.0, -1.0))
 
 while not glfw.window_should_close(window):
-    light_pos = pyrr.Vector3((np.sin(glfw.get_time())*5, 0, 0))
+    # light_pos = pyrr.Vector3((2.0+np.cos(glfw.get_time())*2, 6.0, -1.0))
     move_camera(window)
 
     # 1. render depth of scene to texture (from light's perspective)
@@ -270,7 +269,7 @@ while not glfw.window_should_close(window):
     # render_scene()
     # floor
     glBindVertexArray(plane_VAO)
-    model = pyrr.matrix44.create_from_translation(pyrr.Vector3((0, -5, 0)))
+    model = pyrr.matrix44.create_from_translation(pyrr.Vector3((0, 0, 0)))
     glUniformMatrix4fv(light_model_loc, 1, GL_FALSE, model)
     glDrawArrays(GL_TRIANGLES, 0, 6)
     # cubes
@@ -305,7 +304,7 @@ while not glfw.window_should_close(window):
     # render_scene()
     # floor
     glBindVertexArray(plane_VAO)
-    model = pyrr.matrix44.create_from_translation(pyrr.Vector3((0, -5, 0)))
+    model = pyrr.matrix44.create_from_translation(pyrr.Vector3((0, 0, 0)))
     glUniformMatrix4fv(cube_model_loc, 1, GL_FALSE, model)
     glDrawArrays(GL_TRIANGLES, 0, 6)
     # cubes
